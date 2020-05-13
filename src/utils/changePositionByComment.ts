@@ -1,22 +1,22 @@
-enum NODE_TYPES {
-  ELEMENT = 1,
-  COMMENT = 8,
-}
-
 function findElementsBetweenComments(node: Node, identification: string): Node[] {
   const elements = [];
   const childNodes = node.childNodes as any;
   let startCommentExist = false;
   for (const child of childNodes) {
     if (
-      child.nodeType === NODE_TYPES.COMMENT &&
-      child.nodeValue.trim() === identification &&
+      child.dataset.key === identification &&
       !startCommentExist
     ) {
       startCommentExist = true;
-    } else if (startCommentExist && child.nodeType === NODE_TYPES.ELEMENT) {
+    } else if (
+      startCommentExist &&
+      child.dataset.key !== identification
+    ) {
       elements.push(child);
-    } else if (child.nodeType === NODE_TYPES.COMMENT && startCommentExist) {
+    } else if (
+      child.dataset.key === identification &&
+      startCommentExist
+    ) {
       return elements;
     }
   }
@@ -26,10 +26,7 @@ function findElementsBetweenComments(node: Node, identification: string): Node[]
 function findComment(node: Node, identification: string): Node | undefined {
   const childNodes = node.childNodes as any;
   for (const child of childNodes) {
-    if (
-      child.nodeType === NODE_TYPES.COMMENT &&
-      child.nodeValue.trim() === identification
-    ) {
+    if (child.dataset.key === identification) {
       return child;
     }
   }

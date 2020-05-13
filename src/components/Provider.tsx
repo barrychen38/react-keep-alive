@@ -15,6 +15,11 @@ export enum LIFECYCLE {
   UNMOUNTED,
 }
 
+export enum CACHE_METHOD {
+  FIFO = 'FIFO',
+  LRU = 'LRU',
+}
+
 export interface ICacheItem {
   children: React.ReactNode;
   keepAlive: boolean;
@@ -45,6 +50,7 @@ export interface IKeepAliveProviderProps {
   include?: string | string[] | RegExp;
   exclude?: string | string[] | RegExp;
   max?: number;
+  cacheMethod?: string;
 }
 
 export default class KeepAliveProvider extends React.PureComponent<IKeepAliveProviderProps> implements IKeepAliveProviderImpl {
@@ -52,6 +58,7 @@ export default class KeepAliveProvider extends React.PureComponent<IKeepAlivePro
 
   public static defaultProps = {
     max: 10,
+    cacheMethod: CACHE_METHOD.FIFO,
   };
 
   public storeElement: HTMLElement;
@@ -91,13 +98,46 @@ export default class KeepAliveProvider extends React.PureComponent<IKeepAlivePro
   }
 
   public setCache = (identification: string, value: ICacheItem) => {
+    const {cacheMethod} = this.props;
+    switch (cacheMethod) {
+      case CACHE_METHOD.FIFO:
+        this.setCacheWithFIFO(identification, value);
+        break;
+      case CACHE_METHOD.LRU:
+        this.setCacheWithLRU(identification, value);
+        break;
+      default: {
+        throw new Error('Invaid cache method, only available with `FIFO` and `LRU`');
+        break;
+      }
+    }
+  }
+
+  public setCacheWithFIFO = (identification: string, value: ICacheItem) => {
     const {cache, keys} = this;
-    const {max} = this.props;
     const currentCache = cache[identification];
     if (!currentCache) {
       keys.push(identification);
     }
-    this.cache[identification] = {
+    this.update(identification, value);
+  }
+
+  public setCacheWithLRU = (identification: string, value: ICacheItem) => {
+    const {cache, keys} = this;
+    const currentCache = cache[identification];
+    if (currentCache) {
+      const idx = keys.findIndex(key => key === identification);
+      keys.splice(idx, 1);
+    }
+    keys.push(identification);
+    this.update(identification, value);
+  }
+
+  public update = (identification: string, value: ICacheItem) => {
+    const {cache, keys} = this;
+    const {max} = this.props;
+    const currentCache = cache[identification];
+    cache[identification] = {
       ...currentCache,
       ...value,
     };
@@ -199,11 +239,12 @@ export default class KeepAliveProvider extends React.PureComponent<IKeepAlivePro
                 cacheChildren
                   ? (
                     <React.Fragment key={identification}>
-                      <Comment>{identification}</Comment>
+                      <Comment content={identification} />
                       {cacheChildren}
                       <Comment
+                        content={identification}
                         onLoaded={() => this.startMountingDOM(identification)}
-                      >{identification}</Comment>
+                      />
                     </React.Fragment>
                   )
                   : null

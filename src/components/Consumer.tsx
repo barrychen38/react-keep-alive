@@ -54,7 +54,7 @@ class Consumer extends React.PureComponent<IConsumerProps> {
 
   public render() {
     const {identification} = this;
-    return <Comment ref={ref => this.commentRef = ref}>{identification}</Comment>;
+    return <Comment ref={ref => this.commentRef = ref} content={identification} />;
   }
 }
 
