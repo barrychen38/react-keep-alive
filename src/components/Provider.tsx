@@ -108,7 +108,6 @@ export default class KeepAliveProvider extends React.PureComponent<IKeepAlivePro
         break;
       default: {
         throw new Error('Invaid cache method, only available with `FIFO` and `LRU`');
-        break;
       }
     }
   }

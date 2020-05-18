@@ -1,19 +1,27 @@
+enum NODE_TYPES {
+  ELEMENT = 1,
+  // COMMENT = 8,
+}
+
 function findElementsBetweenComments(node: Node, identification: string): Node[] {
   const elements = [];
   const childNodes = node.childNodes as any;
   let startCommentExist = false;
   for (const child of childNodes) {
     if (
+      child.nodeType === NODE_TYPES.ELEMENT &&
       child.dataset.key === identification &&
       !startCommentExist
     ) {
       startCommentExist = true;
     } else if (
+      child.nodeType === NODE_TYPES.ELEMENT &&
       startCommentExist &&
       child.dataset.key !== identification
     ) {
       elements.push(child);
     } else if (
+      child.nodeType === NODE_TYPES.ELEMENT &&
       child.dataset.key === identification &&
       startCommentExist
     ) {
